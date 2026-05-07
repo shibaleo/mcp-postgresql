@@ -30,7 +30,8 @@ const HANDLER_MAP: Record<
   string,
   (params: Record<string, unknown>) => Promise<string>
 > = {
-  test_connection: () => handlers.testConnection(),
+  list_databases: () => handlers.listDatabases(),
+  test_connection: (p) => handlers.testConnection(p),
   list_schemas: (p) => handlers.listSchemas(p),
   list_tables: (p) => handlers.listTables(p),
   describe_table: (p) => handlers.describeTable(p),

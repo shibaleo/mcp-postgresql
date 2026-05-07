@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Link, usePathname } from "@/lib/router";
 import { SITE_NAME } from "@/lib/site";
 import {
+  Database,
   PanelLeftClose,
   PanelLeftOpen,
   Server,
@@ -22,12 +23,12 @@ interface NavItem {
 }
 
 /**
- * Single-owner nav. The MCP server is configured via env vars, so there's
- * just one page (status + endpoint verification). Settings, credentials,
- * API keys, modules, and oauth-apps are all gone in single-owner mode.
+ * Single-owner nav. MCP Server = endpoint status + verifier; Connections =
+ * the registered PostgreSQL databases the LLM can reach (managed via UI).
  */
 const navItems: NavItem[] = [
   { href: "/mcp-server", label: "MCP Server", icon: Server },
+  { href: "/connections", label: "Connections", icon: Database },
 ];
 
 export function SidebarNav({

@@ -15,6 +15,10 @@
  */
 
 import postgres, { type PostgresType, type Sql } from "postgres";
+import {
+  getDatabaseUrl,
+  listDatabaseSummaries,
+} from "@/lib/databases";
 
 const CONNECT_TIMEOUT_S = 10;
 const QUERY_TIMEOUT_S = 30;
@@ -83,14 +87,19 @@ interface ParsedConn {
   url: URL;
 }
 
-function getConnectionInfo(): ParsedConn {
-  const connStr = process.env.MCPIST_DATABASE_URL;
-  if (!connStr) {
+async function getConnectionInfo(name: string): Promise<ParsedConn> {
+  const connStr = await getDatabaseUrl(name);
+  return parseAndValidate(connStr);
+}
+
+function requireDatabase(params: Record<string, unknown>): string {
+  const name = params.database;
+  if (typeof name !== "string" || name.length === 0) {
     throw new Error(
-      "MCPIST_DATABASE_URL is not set — configure the postgres connection string in env",
+      "'database' is required. Use list_databases to see registered connections.",
     );
   }
-  return parseAndValidate(connStr);
+  return name;
 }
 
 function parseAndValidate(connStr: string): ParsedConn {
@@ -168,9 +177,10 @@ function withTimeout<T>(p: Promise<T>, ms: number, label: string): Promise<T> {
 }
 
 async function withConnection<T>(
+  database: string,
   fn: (sql: Sql, info: ParsedConn) => Promise<T>,
 ): Promise<T> {
-  const info = getConnectionInfo();
+  const info = await getConnectionInfo(database);
   const sql = open(info.raw);
   try {
     return await fn(sql, info);
@@ -185,8 +195,11 @@ async function withConnection<T>(
 
 // ── Tool implementations ──────────────────────────────────────────────────
 
-export async function testConnection(): Promise<string> {
-  return withConnection(async (sql, info) => {
+export async function testConnection(
+  params: Record<string, unknown>,
+): Promise<string> {
+  const database = requireDatabase(params);
+  return withConnection(database, async (sql, info) => {
     const rows = await withTimeout(
       sql<{ version: string }[]>`SELECT version() AS version`,
       QUERY_TIMEOUT_S * 1000,
@@ -211,8 +224,9 @@ export async function testConnection(): Promise<string> {
 export async function listSchemas(
   params: Record<string, unknown>,
 ): Promise<string> {
+  const database = requireDatabase(params);
   const includeSystem = params.include_system === true;
-  return withConnection(async (sql) => {
+  return withConnection(database, async (sql) => {
     const rows = includeSystem
       ? await withTimeout(
           sql<{ schema_name: string }[]>`
@@ -240,6 +254,7 @@ export async function listSchemas(
 export async function listTables(
   params: Record<string, unknown>,
 ): Promise<string> {
+  const database = requireDatabase(params);
   const schema =
     typeof params.schema === "string" && params.schema !== ""
       ? params.schema
@@ -249,7 +264,7 @@ export async function listTables(
     ? ["BASE TABLE", "VIEW"]
     : ["BASE TABLE"];
 
-  return withConnection(async (sql) => {
+  return withConnection(database, async (sql) => {
     const rows = await withTimeout(
       sql<{ table_name: string; table_type: string; row_estimate: string }[]>`
         SELECT
@@ -279,6 +294,7 @@ export async function listTables(
 export async function describeTable(
   params: Record<string, unknown>,
 ): Promise<string> {
+  const database = requireDatabase(params);
   const table = params.table;
   if (typeof table !== "string" || table === "") {
     throw new Error("table is required");
@@ -288,7 +304,7 @@ export async function describeTable(
       ? params.schema
       : "public";
 
-  return withConnection(async (sql) => {
+  return withConnection(database, async (sql) => {
     const columns = await withTimeout(
       sql<
         {
@@ -370,6 +386,7 @@ export async function describeTable(
 export async function queryTool(
   params: Record<string, unknown>,
 ): Promise<string> {
+  const database = requireDatabase(params);
   const sqlText = params.sql;
   if (typeof sqlText !== "string" || sqlText === "") {
     throw new Error("sql is required");
@@ -394,7 +411,7 @@ export async function queryTool(
     if (maxRows < 1) maxRows = 1;
   }
 
-  return withConnection(async (sql) => {
+  return withConnection(database, async (sql) => {
     // postgres-js: tagged-template is for static SQL. For arbitrary SQL with
     // $1/$2 placeholders we use sql.unsafe(query, params), which is the
     // intended escape hatch for user-supplied SELECT.
@@ -436,6 +453,7 @@ export async function queryTool(
 export async function executeTool(
   params: Record<string, unknown>,
 ): Promise<string> {
+  const database = requireDatabase(params);
   const sqlText = params.sql;
   if (typeof sqlText !== "string" || sqlText === "") {
     throw new Error("sql is required");
@@ -453,7 +471,7 @@ export async function executeTool(
     ? (params.params as unknown[])
     : [];
 
-  return withConnection(async (sql) => {
+  return withConnection(database, async (sql) => {
     const result = await withTimeout(
       sql.unsafe(sqlText, queryParams as never[]),
       QUERY_TIMEOUT_S * 1000,
@@ -471,6 +489,7 @@ export async function executeTool(
 export async function executeDDL(
   params: Record<string, unknown>,
 ): Promise<string> {
+  const database = requireDatabase(params);
   const sqlText = params.sql;
   if (typeof sqlText !== "string" || sqlText === "") {
     throw new Error("sql is required");
@@ -480,7 +499,7 @@ export async function executeDDL(
       "only DDL statements (CREATE/ALTER/DROP/TRUNCATE) are allowed. Use 'query' for SELECT or 'execute' for INSERT/UPDATE/DELETE",
     );
   }
-  return withConnection(async (sql) => {
+  return withConnection(database, async (sql) => {
     const result = await withTimeout(
       sql.unsafe(sqlText),
       QUERY_TIMEOUT_S * 1000,
@@ -492,6 +511,18 @@ export async function executeDDL(
       command: meta.command ?? "",
     });
   });
+}
+
+// ── Registry tool ─────────────────────────────────────────────────────────
+
+/**
+ * Returns the registered database connections (name + description). URLs
+ * are intentionally never exposed to the LLM — the server resolves them
+ * from name → URL internally.
+ */
+export async function listDatabases(): Promise<string> {
+  const summaries = await listDatabaseSummaries();
+  return JSON.stringify({ databases: summaries });
 }
 
 // ── Value coercion ────────────────────────────────────────────────────────

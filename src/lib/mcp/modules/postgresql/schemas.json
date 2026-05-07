@@ -1,9 +1,9 @@
 {
   "tools": [
     {
-      "id": "postgresql:test_connection",
-      "name": "test_connection",
-      "description": "Test PostgreSQL connection and return server version and connection info.",
+      "id": "postgresql:list_databases",
+      "name": "list_databases",
+      "description": "List the registered PostgreSQL databases (name and description). Call this first to discover which databases are available; pass the chosen name as the `database` parameter on every other postgresql tool.",
       "annotation": "readOnly",
       "inputSchema": {
         "type": "object",
@@ -11,18 +11,39 @@
       }
     },
     {
-      "id": "postgresql:list_schemas",
-      "name": "list_schemas",
-      "description": "List all schemas in the database.",
+      "id": "postgresql:test_connection",
+      "name": "test_connection",
+      "description": "Test the PostgreSQL connection for the named database and return server version and connection info.",
       "annotation": "readOnly",
       "inputSchema": {
         "type": "object",
         "properties": {
+          "database": {
+            "type": "string",
+            "description": "Registered database name (see list_databases)."
+          }
+        },
+        "required": ["database"]
+      }
+    },
+    {
+      "id": "postgresql:list_schemas",
+      "name": "list_schemas",
+      "description": "List all schemas in the named database.",
+      "annotation": "readOnly",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "database": {
+            "type": "string",
+            "description": "Registered database name (see list_databases)."
+          },
           "include_system": {
             "type": "boolean",
             "description": "Include system schemas (pg_catalog, information_schema). Default: false"
           }
-        }
+        },
+        "required": ["database"]
       }
     },
     {
@@ -33,6 +54,10 @@
       "inputSchema": {
         "type": "object",
         "properties": {
+          "database": {
+            "type": "string",
+            "description": "Registered database name (see list_databases)."
+          },
           "schema": {
             "type": "string",
             "description": "Schema name. Default: public"
@@ -41,7 +66,8 @@
             "type": "boolean",
             "description": "Include views. Default: true"
           }
-        }
+        },
+        "required": ["database"]
       }
     },
     {
@@ -52,13 +78,17 @@
       "inputSchema": {
         "type": "object",
         "properties": {
+          "database": {
+            "type": "string",
+            "description": "Registered database name (see list_databases)."
+          },
           "table": { "type": "string", "description": "Table name" },
           "schema": {
             "type": "string",
             "description": "Schema name. Default: public"
           }
         },
-        "required": ["table"]
+        "required": ["database", "table"]
       }
     },
     {
@@ -69,6 +99,10 @@
       "inputSchema": {
         "type": "object",
         "properties": {
+          "database": {
+            "type": "string",
+            "description": "Registered database name (see list_databases)."
+          },
           "sql": { "type": "string", "description": "SELECT query to execute" },
           "params": {
             "type": "array",
@@ -80,7 +114,7 @@
             "description": "Maximum rows to return. Default: 1000, Max: 10000"
           }
         },
-        "required": ["sql"]
+        "required": ["database", "sql"]
       }
     },
     {
@@ -91,6 +125,10 @@
       "inputSchema": {
         "type": "object",
         "properties": {
+          "database": {
+            "type": "string",
+            "description": "Registered database name (see list_databases)."
+          },
           "sql": {
             "type": "string",
             "description": "INSERT/UPDATE/DELETE statement to execute"
@@ -101,7 +139,7 @@
             "items": { "type": "string" }
           }
         },
-        "required": ["sql"]
+        "required": ["database", "sql"]
       }
     },
     {
@@ -112,9 +150,13 @@
       "inputSchema": {
         "type": "object",
         "properties": {
+          "database": {
+            "type": "string",
+            "description": "Registered database name (see list_databases)."
+          },
           "sql": { "type": "string", "description": "DDL statement to execute" }
         },
-        "required": ["sql"]
+        "required": ["database", "sql"]
       }
     }
   ]

@@ -8,15 +8,21 @@ Claude.ai / Claude Desktop / Cursor
        ↓ Streamable HTTP, Bearer <Ed25519 JWT>
 https://mcpist-vc.vercel.app/api/v1/mcp   ← MCP endpoint
        ↓
-postgresql module (7 tools)
+postgresql module (8 tools: list_databases + 7 query/exec)
        ↓
-PostgreSQL DB (MCPIST_DATABASE_URL)
+mcpist.connections registry (encrypted URLs)
+       ↓
+PostgreSQL DBs registered via the SPA UI
 ```
 
-Single-owner: no per-tenant DB, no user table, no credential storage.
-The owner is identified by `OWNER_EMAIL` (hardcoded in
-[src/lib/auth.ts](src/lib/auth.ts)); the postgres connection string is
-read from `MCPIST_DATABASE_URL`.
+Single-owner: no user table, no per-tenant data plane. The owner is
+identified by `OWNER_EMAIL` (hardcoded in
+[src/lib/auth.ts](src/lib/auth.ts)). The owner registers any number of
+named PostgreSQL connections via the SPA — they live encrypted in
+`mcpist.connections` on the registry DB
+(`MCPIST_REGISTRY_DATABASE_URL`). The LLM calls `list_databases` to
+discover them and passes the chosen `database` name on every other tool
+call.
 
 ## Architecture
 
@@ -36,11 +42,14 @@ api/index.ts                     Vercel entry → re-exports _bundle.mjs
 src/
   app/(pages)/                   UI pages
     mcp-server/                  endpoint URL + verifier
+    connections/                 owner-managed PG connection registry UI
     oauth/consent/               OAuth authorize → Clerk login bounce
     dev/oauth-tester/            full handshake walker (debugging)
   components/                    shadcn/ui primitives + AuthGate + AppLayout
   lib/
     auth.ts                      Clerk JWT (owner gate) + access-token verification
+    databases.ts                 mcpist.connections CRUD via postgres-js
+    credentials/crypto.ts        AES-256-GCM (CREDENTIAL_ENCRYPTION_KEY)
     ed25519.ts                   PKCS#8 keypair from SERVER_JWT_SIGNING_KEY
     app-url.ts                   Canonical app URL resolution
     mcp/                         Module registry, JSON-RPC dispatcher,
@@ -49,11 +58,14 @@ src/
     hono-app.ts                  Route mounting + auth gate + CORS
   routes/
     mcp.ts                       POST /api/v1/mcp
+    connections.ts               GET / GET ?reveal / PUT
     well-known.ts                .well-known/oauth-{protected-resource,authorization-server}
     oauth-{authorize,token,register}.ts
     health.ts                    GET /health (env probe)
+database/migrations/             Hand-written baseline.sql for mcpist schema
 scripts/
   build-api.mjs                  esbuild → api/_bundle.mjs
+  bootstrap-db.mjs               Apply baseline.sql to MCPIST_REGISTRY_DATABASE_URL
 ```
 
 ## Env
@@ -61,11 +73,22 @@ scripts/
 | Var | Purpose |
 |---|---|
 | `SERVER_JWT_SIGNING_KEY` | 32-byte base64 Ed25519 seed — signs OAuth codes, refresh + access tokens. Rotate to invalidate every issued token. |
-| `MCPIST_DATABASE_URL` | Postgres URL for the postgresql MCP module. |
+| `CREDENTIAL_ENCRYPTION_KEY` | 32-byte base64 AES-256-GCM key — encrypts connection URLs at rest in `mcpist.connections`. |
+| `MCPIST_REGISTRY_DATABASE_URL` | Postgres URL for the registry DB (holds `mcpist.connections`). The data DBs themselves are entered via the SPA UI. |
 | `VITE_CLERK_PUBLISHABLE_KEY` / `CLERK_SECRET_KEY` | Clerk |
 | `APP_URL` | Optional. Falls back to `VERCEL_PROJECT_PRODUCTION_URL` then to the request host. |
 
-No DB, no encryption key — single-owner mode means all secrets are env vars.
+## DB schema
+
+```
+mcpist.connections
+  name        text PRIMARY KEY  (^[a-z][a-z0-9_-]*$)
+  description text
+  encrypted   text              ("v1:" + base64(nonce || ciphertext || tag))
+  timestamps
+```
+
+Bootstrap a fresh registry DB with `pnpm db:bootstrap`.
 
 ## Adding an MCP module
 
@@ -81,6 +104,7 @@ The `postgresql` module is the working reference.
 
 ```sh
 pnpm install
+pnpm db:bootstrap          # apply baseline.sql to MCPIST_REGISTRY_DATABASE_URL (idempotent)
 pnpm dev                   # Vite dev server on :5173
 pnpm build                 # vite build && esbuild bundle for Vercel
 ```

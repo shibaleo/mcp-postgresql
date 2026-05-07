@@ -13,7 +13,8 @@ const app = new Hono().get("/", (c) =>
       hasClerkPK: !!process.env.VITE_CLERK_PUBLISHABLE_KEY,
       hasClerkSK: !!process.env.CLERK_SECRET_KEY,
       hasJwtKey: !!process.env.SERVER_JWT_SIGNING_KEY,
-      hasPgUrl: !!process.env.MCPIST_DATABASE_URL,
+      hasEncKey: !!process.env.CREDENTIAL_ENCRYPTION_KEY,
+      hasRegistryUrl: !!process.env.MCPIST_REGISTRY_DATABASE_URL,
       appUrl: getAppUrl(c.req.raw),
     },
     runtime: {

@@ -13,6 +13,7 @@ import { AuthenticateWithRedirectCallback } from "@clerk/react";
 /* ── Lazy page imports ── */
 
 const McpServerPage = lazy(() => import("./app/(pages)/mcp-server/page"));
+const ConnectionsPage = lazy(() => import("./app/(pages)/connections/page"));
 const OAuthConsentPage = lazy(
   () => import("./app/(pages)/oauth/consent/page"),
 );
@@ -55,6 +56,7 @@ function lazyRoute(
 }
 
 const mcpServerRoute = lazyRoute("/mcp-server", McpServerPage);
+const connectionsRoute = lazyRoute("/connections", ConnectionsPage);
 // Dev-only — not in the sidebar; reachable from the MCP Server page link.
 const oauthTesterRoute = lazyRoute("/dev/oauth-tester", OAuthTesterPage);
 
@@ -103,7 +105,7 @@ const oauthConsentRoute = createRoute({
 });
 
 const routeTree = rootRoute.addChildren([
-  authLayout.addChildren([mcpServerRoute, oauthTesterRoute]),
+  authLayout.addChildren([mcpServerRoute, connectionsRoute, oauthTesterRoute]),
   indexRoute,
   ssoCallbackRoute,
   oauthTestCallbackRoute,

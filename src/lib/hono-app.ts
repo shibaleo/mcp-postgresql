@@ -14,6 +14,7 @@ import wellKnown from "@/routes/well-known";
 import oauthRegister from "@/routes/oauth-register";
 import oauthAuthorize from "@/routes/oauth-authorize";
 import oauthToken from "@/routes/oauth-token";
+import connections from "@/routes/connections";
 
 /* ── V1 API sub-app ──
  *
@@ -115,6 +116,7 @@ const v1 = new Hono<Env>()
   })
   // Protected
   .route("/mcp", mcp)
+  .route("/connections", connections)
   // `/me` is the canonical "am I logged in" probe used by AuthGate.
   // In single-owner mode the only valid identity is the owner.
   .get("/me", (c) =>

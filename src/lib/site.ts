@@ -1,1 +1,1 @@
-export const SITE_NAME = "MCPist";
+export const SITE_NAME = "Remote PostgreSQL";

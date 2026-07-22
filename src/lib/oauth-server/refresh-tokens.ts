@@ -8,7 +8,7 @@
  * Non-rotating: the same refresh token stays valid until its expiry, so
  * Claude.ai can keep refreshing without ever needing user re-consent for
  * 90 days. Single-user setup — no per-token revocation; rotate
- * SERVER_JWT_SIGNING_KEY's kid to invalidate all.
+ * MCP_POSTGRESQL_SERVER_JWT_SIGNING_KEY's kid to invalidate all.
  */
 
 import * as jose from "jose";

@@ -4,11 +4,12 @@ import { RouterProvider } from "@tanstack/react-router";
 import { ClerkProvider } from "@clerk/react";
 import { Toaster } from "sonner";
 import { router } from "./router";
+import { publicConfig } from "@/lib/public-config";
 import "./app/globals.css";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <ClerkProvider publishableKey={import.meta.env.VITE_CLERK_PUBLISHABLE_KEY}>
+    <ClerkProvider publishableKey={publicConfig.clerkPublishableKey}>
       <RouterProvider router={router} />
       <Toaster position="bottom-right" />
     </ClerkProvider>

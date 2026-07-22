@@ -1,20 +1,22 @@
 /**
  * One-shot bootstrap: apply the baseline migration to the registry DB.
  *
- * Usage:  pnpm db:bootstrap
+ * Usage:  pnpm db:bootstrap   (wraps this in `bws run` — see package.json)
  *
- * Reads MCPIST_REGISTRY_DATABASE_URL from .env. Idempotent — re-running is
+ * Reads MCP_POSTGRESQL_REGISTRY_DATABASE_URL (bws-injected). Idempotent — re-running is
  * a no-op since every CREATE uses IF NOT EXISTS.
  */
 
 import { readFileSync } from "node:fs";
 import postgres from "postgres";
 
-// Lightweight .env loader so we don't need the dotenv dep.
+// Lightweight .env.local loader so we don't need the dotenv dep. In normal
+// use the registry URL is injected by `bws run`; this only picks up local
+// overrides / the BWS token from .env.local.
 function loadEnv() {
   let text;
   try {
-    text = readFileSync(".env", "utf-8");
+    text = readFileSync(".env.local", "utf-8");
   } catch {
     return;
   }
@@ -34,9 +36,9 @@ function loadEnv() {
 
 loadEnv();
 
-const url = process.env.MCPIST_REGISTRY_DATABASE_URL;
+const url = process.env.MCP_POSTGRESQL_REGISTRY_DATABASE_URL;
 if (!url) {
-  console.error("MCPIST_REGISTRY_DATABASE_URL is not set");
+  console.error("MCP_POSTGRESQL_REGISTRY_DATABASE_URL is not set");
   process.exit(1);
 }
 

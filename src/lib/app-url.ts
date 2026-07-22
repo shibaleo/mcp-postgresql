@@ -9,12 +9,13 @@
  * alias (`mcpist-vc.vercel.app`).
  *
  * Resolution order:
- *   1. APP_URL env (explicit override)
- *   2. VERCEL_PROJECT_PRODUCTION_URL — auto-injected by Vercel; always the
- *      canonical production hostname even on preview-URL hits.
- *   3. Request-derived URL — fallback for `vercel dev` / `pnpm dev` /
- *      self-hosted setups where neither env is set.
+ *   1. publicConfig.baseUrl — the canonical prod origin (Clerk-registered
+ *      custom domain), baked at build time. null in dev.
+ *   2. VERCEL_PROJECT_PRODUCTION_URL — auto-injected by Vercel; canonical
+ *      production hostname even on preview-URL hits (safety fallback).
+ *   3. Request-derived URL — fallback for `pnpm dev` / self-hosted setups.
  */
+import { publicConfig } from "@/lib/public-config";
 
 function ensureScheme(host: string): string {
   if (host.startsWith("http://") || host.startsWith("https://")) {
@@ -24,8 +25,7 @@ function ensureScheme(host: string): string {
 }
 
 export function getAppUrl(req: Request): string {
-  const explicit = process.env.APP_URL;
-  if (explicit) return ensureScheme(explicit);
+  if (publicConfig.baseUrl) return ensureScheme(publicConfig.baseUrl);
 
   const vercelProd = process.env.VERCEL_PROJECT_PRODUCTION_URL;
   if (vercelProd) return ensureScheme(vercelProd);

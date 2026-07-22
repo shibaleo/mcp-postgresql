@@ -5,16 +5,17 @@
 
 import { Hono } from "hono";
 import { getAppUrl } from "@/lib/app-url";
+import { publicConfig } from "@/lib/public-config";
 
 const app = new Hono().get("/", (c) =>
   c.json({
     status: "ok",
     env: {
-      hasClerkPK: !!process.env.VITE_CLERK_PUBLISHABLE_KEY,
+      hasClerkPK: !!publicConfig.clerkPublishableKey,
       hasClerkSK: !!process.env.CLERK_SECRET_KEY,
-      hasJwtKey: !!process.env.SERVER_JWT_SIGNING_KEY,
-      hasEncKey: !!process.env.CREDENTIAL_ENCRYPTION_KEY,
-      hasRegistryUrl: !!process.env.MCPIST_REGISTRY_DATABASE_URL,
+      hasJwtKey: !!process.env.MCP_POSTGRESQL_SERVER_JWT_SIGNING_KEY,
+      hasEncKey: !!process.env.MCP_POSTGRESQL_CREDENTIAL_ENCRYPTION_KEY,
+      hasRegistryUrl: !!process.env.MCP_POSTGRESQL_REGISTRY_DATABASE_URL,
       appUrl: getAppUrl(c.req.raw),
     },
     runtime: {

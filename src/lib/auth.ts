@@ -19,6 +19,7 @@
 import * as jose from "jose";
 import type { KeyObject } from "node:crypto";
 import { loadEd25519Keypair } from "@/lib/ed25519";
+import { publicConfig } from "@/lib/public-config";
 
 export const OWNER_EMAIL = "shiba.dog.leo.private@gmail.com";
 
@@ -36,7 +37,7 @@ const OAUTH_OWNER: AuthResult = { authenticated: true, source: "oauth" };
 // ── Clerk JWKS ────────────────────────────────────────────────────────────
 
 function getClerkDomain(): string | null {
-  const pk = process.env.VITE_CLERK_PUBLISHABLE_KEY;
+  const pk = publicConfig.clerkPublishableKey;
   if (!pk) return null;
   const encoded = pk.replace(/^pk_(test|live)_/, "");
   try {

@@ -1,8 +1,9 @@
 /**
- * Connection registry — CRUD over `mcpist.connections` on the registry DB
- * (MCPIST_REGISTRY_DATABASE_URL).
+ * Connection registry — CRUD over `mcp_postgresql.connections` on the registry
+ * DB (MCP_POSTGRESQL_REGISTRY_DATABASE_URL).
  *
- * Owner-managed: every value is encrypted at rest with CREDENTIAL_ENCRYPTION_KEY
+ * Owner-managed: every value is encrypted at rest with
+ * MCP_POSTGRESQL_CREDENTIAL_ENCRYPTION_KEY
  * (AES-256-GCM, see lib/credentials/crypto.ts). URLs leave this module only via
  * `getDatabaseUrl(name)` and `listDatabaseEntriesWithUrls()`; MCP-facing APIs
  * use `listDatabaseSummaries()` so the LLM never sees connection strings.
@@ -36,9 +37,9 @@ const urlCache = new Map<string, CacheLine>();
 let listCache: { entries: DatabaseEntry[]; expiresAt: number } | null = null;
 
 function getRegistryUrl(): string {
-  const url = process.env.MCPIST_REGISTRY_DATABASE_URL;
+  const url = process.env.MCP_POSTGRESQL_REGISTRY_DATABASE_URL;
   if (!url) {
-    throw new Error("MCPIST_REGISTRY_DATABASE_URL is not set");
+    throw new Error("MCP_POSTGRESQL_REGISTRY_DATABASE_URL is not set");
   }
   return url;
 }
@@ -93,7 +94,7 @@ async function readAll(): Promise<DatabaseEntry[]> {
   try {
     const rows = await sql<{ name: string; description: string; encrypted: string }[]>`
       SELECT name, description, encrypted
-      FROM mcpist.connections
+      FROM mcp_postgresql.connections
       ORDER BY name
     `;
     const entries: DatabaseEntry[] = [];
@@ -176,13 +177,13 @@ export async function replaceDatabases(entries: ReplaceInput[]): Promise<void> {
       const names = prepared.map((p) => p.name);
       // Delete entries that aren't in the new set. Empty list → wipe all.
       if (names.length === 0) {
-        await tx`DELETE FROM mcpist.connections`;
+        await tx`DELETE FROM mcp_postgresql.connections`;
       } else {
-        await tx`DELETE FROM mcpist.connections WHERE name <> ALL(${names})`;
+        await tx`DELETE FROM mcp_postgresql.connections WHERE name <> ALL(${names})`;
       }
       for (const p of prepared) {
         await tx`
-          INSERT INTO mcpist.connections (name, description, encrypted)
+          INSERT INTO mcp_postgresql.connections (name, description, encrypted)
           VALUES (${p.name}, ${p.description}, ${p.encrypted})
           ON CONFLICT (name) DO UPDATE
             SET description = EXCLUDED.description,

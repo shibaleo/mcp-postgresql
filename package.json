@@ -4,10 +4,13 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "dotenv -e .env.local -- bws run --project-id 6eece948-709c-4a86-8923-b48e017573b9 -- vite",
     "build": "vite build && node scripts/build-api.mjs",
     "preview": "vite preview",
-    "db:bootstrap": "node scripts/bootstrap-db.mjs"
+    "db:bootstrap": "dotenv -e .env.local -- bws run --project-id 6eece948-709c-4a86-8923-b48e017573b9 -- node scripts/bootstrap-db.mjs",
+    "db:bootstrap:prod": "dotenv -e .env.local -- bws run --project-id 16c74c07-0fb8-468a-8606-b48e01757644 -- node scripts/bootstrap-db.mjs",
+    "secrets:prod": "dotenv -e .env.local -- node scripts/set-vercel-secrets.mjs",
+    "deploy": "dotenv -e .env.local -- bws run --project-id b49ccb02-f02b-4c7e-a4c1-b48e005732fc -- vercel deploy --prod --yes"
   },
   "dependencies": {
     "@clerk/react": "^6.4.2",
@@ -41,9 +44,12 @@
     "@types/node": "^22.15.0",
     "@types/react": "^19.1.0",
     "@types/react-dom": "^19.1.0",
+    "dotenv": "^17.4.2",
+    "dotenv-cli": "^11.0.0",
     "esbuild": "^0.28.0",
     "postcss": "^8.5.3",
     "tailwindcss": "^4.1.4",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vercel": "^56.5.0"
   }
 }

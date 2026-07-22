@@ -1,5 +1,5 @@
 /**
- * Ed25519 keypair derived from the SERVER_JWT_SIGNING_KEY env var.
+ * Ed25519 keypair derived from the MCP_POSTGRESQL_SERVER_JWT_SIGNING_KEY env var.
  *
  * Web Crypto's `subtle.importKey("raw", ...)` for Ed25519 only accepts
  * 32-byte *public* keys, not the seed for a private key — passing a seed
@@ -31,7 +31,7 @@ function decodeSeed(b64: string): Buffer {
   const buf = Buffer.from(b64, "base64");
   if (buf.length !== 32) {
     throw new Error(
-      `SERVER_JWT_SIGNING_KEY must be a 32-byte base64 seed (got ${buf.length} bytes)`,
+      `MCP_POSTGRESQL_SERVER_JWT_SIGNING_KEY must be a 32-byte base64 seed (got ${buf.length} bytes)`,
     );
   }
   return buf;
@@ -42,8 +42,8 @@ export function loadEd25519Keypair(): {
   publicKey: KeyObject;
 } {
   if (cache) return cache;
-  const seedB64 = process.env.SERVER_JWT_SIGNING_KEY;
-  if (!seedB64) throw new Error("SERVER_JWT_SIGNING_KEY is not set");
+  const seedB64 = process.env.MCP_POSTGRESQL_SERVER_JWT_SIGNING_KEY;
+  if (!seedB64) throw new Error("MCP_POSTGRESQL_SERVER_JWT_SIGNING_KEY is not set");
   const seed = decodeSeed(seedB64);
   const der = Buffer.concat([PKCS8_PREFIX, seed]);
   const privateKey = createPrivateKey({

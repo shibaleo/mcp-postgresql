@@ -34,14 +34,14 @@ function encodeBase64(bytes: Uint8Array): string {
 
 async function getKey(): Promise<CryptoKey> {
   if (cachedKey) return cachedKey;
-  const raw = process.env.CREDENTIAL_ENCRYPTION_KEY;
+  const raw = process.env.MCP_POSTGRESQL_CREDENTIAL_ENCRYPTION_KEY;
   if (!raw) {
-    throw new Error("CREDENTIAL_ENCRYPTION_KEY is required");
+    throw new Error("MCP_POSTGRESQL_CREDENTIAL_ENCRYPTION_KEY is required");
   }
   const keyBytes = decodeBase64(raw);
   if (keyBytes.length !== KEY_BYTES) {
     throw new Error(
-      `CREDENTIAL_ENCRYPTION_KEY must be 32 bytes base64-encoded (got ${keyBytes.length} bytes)`,
+      `MCP_POSTGRESQL_CREDENTIAL_ENCRYPTION_KEY must be 32 bytes base64-encoded (got ${keyBytes.length} bytes)`,
     );
   }
   cachedKey = await crypto.subtle.importKey(

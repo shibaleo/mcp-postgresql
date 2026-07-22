@@ -4,8 +4,8 @@
  * Tool definitions live in `schemas.json` so they can be exported once and
  * reused by the Console UI without duplicating the descriptions.
  *
- * Connection string comes from the MCPIST_DATABASE_URL env var
- * (single-owner mode).
+ * Connection strings are resolved by name from the connection registry
+ * (see lib/databases.ts), not from an env var (single-owner mode).
  */
 
 import {

@@ -6,7 +6,8 @@ dist/
 api/_bundle.mjs
 
 # Vercel
-.vercel/
+.vercel/*
+!.vercel/project.json
 
 # Claude Code
 .claude/

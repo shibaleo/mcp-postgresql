@@ -107,7 +107,7 @@ const v1 = new Hono<Env>()
         { error: "Unauthorized" },
         401,
         {
-          "WWW-Authenticate": `Bearer realm="mcpist", resource_metadata="${resourceMetadata}"`,
+          "WWW-Authenticate": `Bearer realm="mcp-postgresql", resource_metadata="${resourceMetadata}"`,
         },
       );
     }
@@ -136,7 +136,7 @@ const v1 = new Hono<Env>()
  *
  * The apex mount is essential: Claude.ai constructs the authorization
  * server metadata URL from the issuer (which we declare as our root
- * domain), so it fetches `https://mcpist-vc.vercel.app/.well-known/...`.
+ * domain), so it fetches `https://postgresql.mcp.shibaleo.uk/.well-known/...`.
  * Without the apex mount that path falls through to the SPA HTML.
  */
 const app = new Hono()

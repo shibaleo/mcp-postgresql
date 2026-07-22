@@ -5,8 +5,8 @@
  * developer console — the value we send at authorize/token time has to
  * match byte-for-byte. Deriving it from `Host`/`x-forwarded-host` would
  * break the moment a request hits a deployment-specific Vercel URL
- * (`mcpist-abc123-shibaleos-projects.vercel.app`) instead of the canonical
- * alias (`mcpist-vc.vercel.app`).
+ * (`mcp-postgresql-abc123-shibaleos-projects.vercel.app`) instead of the canonical
+ * alias (`postgresql.mcp.shibaleo.uk`).
  *
  * Resolution order:
  *   1. publicConfig.baseUrl — the canonical prod origin (Clerk-registered

@@ -49,7 +49,7 @@ interface Step {
 }
 
 interface CallbackMessage {
-  type: "mcpist-oauth-test";
+  type: "mcp-postgresql-oauth-test";
   code: string | null;
   state: string | null;
   error: string | null;
@@ -128,7 +128,7 @@ export function OAuthTester({ mcpEndpoint }: { mcpEndpoint: string }) {
           params: {
             protocolVersion: PROTOCOL_VERSION,
             capabilities: {},
-            clientInfo: { name: "mcpist OAuth tester", version: "1.0" },
+            clientInfo: { name: "mcp-postgresql OAuth tester", version: "1.0" },
           },
         }),
       });
@@ -211,7 +211,7 @@ export function OAuthTester({ mcpEndpoint }: { mcpEndpoint: string }) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          client_name: "mcpist OAuth tester",
+          client_name: "mcp-postgresql OAuth tester",
           redirect_uris: [callbackUrl],
           scope: "openid profile email",
         }),
@@ -250,7 +250,7 @@ export function OAuthTester({ mcpEndpoint }: { mcpEndpoint: string }) {
 
     const popup = window.open(
       authUrl.toString(),
-      "mcpist-oauth-test",
+      "mcp-postgresql-oauth-test",
       "width=600,height=700",
     );
     if (!popup) {
@@ -267,7 +267,7 @@ export function OAuthTester({ mcpEndpoint }: { mcpEndpoint: string }) {
         const handler = (event: MessageEvent) => {
           if (event.origin !== window.location.origin) return;
           const data = event.data as Partial<CallbackMessage> | undefined;
-          if (data?.type !== "mcpist-oauth-test") return;
+          if (data?.type !== "mcp-postgresql-oauth-test") return;
           window.removeEventListener("message", handler);
           clearTimeout(timer);
           if (data.error) {
@@ -341,7 +341,7 @@ export function OAuthTester({ mcpEndpoint }: { mcpEndpoint: string }) {
           params: {
             protocolVersion: PROTOCOL_VERSION,
             capabilities: {},
-            clientInfo: { name: "mcpist OAuth tester", version: "1.0" },
+            clientInfo: { name: "mcp-postgresql OAuth tester", version: "1.0" },
           },
         }),
       });

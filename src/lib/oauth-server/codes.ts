@@ -20,7 +20,7 @@ import * as jose from "jose";
 import { loadEd25519Keypair } from "@/lib/ed25519";
 
 const CODE_TTL_S = 300; // 5 minutes
-const AUDIENCE = "mcpist-oauth-code";
+const AUDIENCE = "mcp-postgresql-oauth-code";
 
 export interface CodePayload {
   clientId: string;

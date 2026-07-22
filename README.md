@@ -1,4 +1,4 @@
-# mcpist-vc
+# mcp-postgresql
 
 Single-owner MCP (Model Context Protocol) server with built-in OAuth.
 Deployed on Vercel as a single Hono function + a Vite SPA console.
@@ -6,11 +6,11 @@ Deployed on Vercel as a single Hono function + a Vite SPA console.
 ```
 Claude.ai / Claude Desktop / Cursor
        ↓ Streamable HTTP, Bearer <Ed25519 JWT>
-https://mcpist-vc.vercel.app/api/v1/mcp   ← MCP endpoint
+https://postgresql.mcp.shibaleo.uk/api/v1/mcp   ← MCP endpoint
        ↓
 postgresql module (8 tools: list_databases + 7 query/exec)
        ↓
-mcpist.connections registry (encrypted URLs)
+mcp_postgresql.connections registry (encrypted URLs)
        ↓
 PostgreSQL DBs registered via the SPA UI
 ```
@@ -19,8 +19,8 @@ Single-owner: no user table, no per-tenant data plane. The owner is
 identified by `OWNER_EMAIL` (hardcoded in
 [src/lib/auth.ts](src/lib/auth.ts)). The owner registers any number of
 named PostgreSQL connections via the SPA — they live encrypted in
-`mcpist.connections` on the registry DB
-(`MCPIST_REGISTRY_DATABASE_URL`). The LLM calls `list_databases` to
+`mcp_postgresql.connections` on the registry DB
+(`MCP_POSTGRESQL_REGISTRY_DATABASE_URL`). The LLM calls `list_databases` to
 discover them and passes the chosen `database` name on every other tool
 call.
 
@@ -48,7 +48,7 @@ src/
   components/                    shadcn/ui primitives + AuthGate + AppLayout
   lib/
     auth.ts                      Clerk JWT (owner gate) + access-token verification
-    databases.ts                 mcpist.connections CRUD via postgres-js
+    databases.ts                 mcp_postgresql.connections CRUD via postgres-js
     credentials/crypto.ts        AES-256-GCM (CREDENTIAL_ENCRYPTION_KEY)
     ed25519.ts                   PKCS#8 keypair from SERVER_JWT_SIGNING_KEY
     app-url.ts                   Canonical app URL resolution
@@ -62,10 +62,10 @@ src/
     well-known.ts                .well-known/oauth-{protected-resource,authorization-server}
     oauth-{authorize,token,register}.ts
     health.ts                    GET /health (env probe)
-database/migrations/             Hand-written baseline.sql for mcpist schema
+database/migrations/             Hand-written baseline.sql for mcp_postgresql schema
 scripts/
   build-api.mjs                  esbuild → api/_bundle.mjs
-  bootstrap-db.mjs               Apply baseline.sql to MCPIST_REGISTRY_DATABASE_URL
+  bootstrap-db.mjs               Apply baseline.sql to MCP_POSTGRESQL_REGISTRY_DATABASE_URL
 ```
 
 ## Env
@@ -73,15 +73,15 @@ scripts/
 | Var | Purpose |
 |---|---|
 | `SERVER_JWT_SIGNING_KEY` | 32-byte base64 Ed25519 seed — signs OAuth codes, refresh + access tokens. Rotate to invalidate every issued token. |
-| `CREDENTIAL_ENCRYPTION_KEY` | 32-byte base64 AES-256-GCM key — encrypts connection URLs at rest in `mcpist.connections`. |
-| `MCPIST_REGISTRY_DATABASE_URL` | Postgres URL for the registry DB (holds `mcpist.connections`). The data DBs themselves are entered via the SPA UI. |
+| `CREDENTIAL_ENCRYPTION_KEY` | 32-byte base64 AES-256-GCM key — encrypts connection URLs at rest in `mcp_postgresql.connections`. |
+| `MCP_POSTGRESQL_REGISTRY_DATABASE_URL` | Postgres URL for the registry DB (holds `mcp_postgresql.connections`). The data DBs themselves are entered via the SPA UI. |
 | `VITE_CLERK_PUBLISHABLE_KEY` / `CLERK_SECRET_KEY` | Clerk |
 | `APP_URL` | Optional. Falls back to `VERCEL_PROJECT_PRODUCTION_URL` then to the request host. |
 
 ## DB schema
 
 ```
-mcpist.connections
+mcp_postgresql.connections
   name        text PRIMARY KEY  (^[a-z][a-z0-9_-]*$)
   description text
   encrypted   text              ("v1:" + base64(nonce || ciphertext || tag))
@@ -104,14 +104,14 @@ The `postgresql` module is the working reference.
 
 ```sh
 pnpm install
-pnpm db:bootstrap          # apply baseline.sql to MCPIST_REGISTRY_DATABASE_URL (idempotent)
+pnpm db:bootstrap          # apply baseline.sql to MCP_POSTGRESQL_REGISTRY_DATABASE_URL (idempotent)
 pnpm dev                   # Vite dev server on :5173
 pnpm build                 # vite build && esbuild bundle for Vercel
 ```
 
 ## OAuth flow (Claude.ai etc.)
 
-mcpist is a self-hosted OAuth 2.0 Authorization Server. Discovery →
+mcp-postgresql is a self-hosted OAuth 2.0 Authorization Server. Discovery →
 DCR → PKCE-authorize → token exchange. Authorize verifies the Clerk
 session cookie (or bounces through `/oauth/consent` for login) and
 checks the email matches `OWNER_EMAIL`, then issues a 5-min auth code.
@@ -127,7 +127,7 @@ Token endpoint returns:
 ```
 
 Verify the round-trip end-to-end on the
-[`/dev/oauth-tester`](https://mcpist-vc.vercel.app/dev/oauth-tester) page.
+[`/dev/oauth-tester`](https://postgresql.mcp.shibaleo.uk/dev/oauth-tester) page.
 
 ## Deploy
 

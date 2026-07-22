@@ -115,7 +115,7 @@ export default function McpServerPage() {
           params: {
             protocolVersion: PROTOCOL_VERSION,
             capabilities: {},
-            clientInfo: { name: "mcpist console", version: "1.0.0" },
+            clientInfo: { name: "mcp-postgresql console", version: "1.0.0" },
           },
         }),
       });

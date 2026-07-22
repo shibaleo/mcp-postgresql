@@ -1,0 +1,27 @@
+name: CI
+
+# Type-check + build on every push/PR. Vercel builds with esbuild/vite which
+# do NOT type-check, so this is the gate that stops a type-broken commit from
+# auto-deploying to production. No secrets required (public-config is committed;
+# e2e/secret-dependent checks run locally, not here).
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec tsc --noEmit
+      - run: pnpm build

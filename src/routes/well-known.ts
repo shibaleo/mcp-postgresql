@@ -1,7 +1,7 @@
 /**
  * .well-known endpoints for MCP OAuth discovery.
  *
- * mcpist runs its OWN OAuth Authorization Server (proxying Clerk for
+ * mcp-postgresql runs its OWN OAuth Authorization Server (proxying Clerk for
  * end-user login under the hood). Discovery metadata advertises our
  * authorize / token / register endpoints — clients (Claude.ai, Claude
  * Desktop, ...) never talk to Clerk's OAuth surface directly.

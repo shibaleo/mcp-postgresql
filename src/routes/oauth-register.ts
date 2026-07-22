@@ -29,7 +29,7 @@ const app = new Hono().post("/", zValidator("json", dcrBody), async (c) => {
   // Random opaque client_id. Doesn't need to map to anything we store —
   // the authorize endpoint accepts any value and binds the (client_id,
   // redirect_uri, code_challenge) into the authorization-code JWT.
-  const clientId = `mcpist_${crypto.randomUUID()}`;
+  const clientId = `mcp-postgresql_${crypto.randomUUID()}`;
 
   return c.json({
     client_id: clientId,

@@ -77,7 +77,7 @@ const ssoCallbackRoute = createRoute({
 });
 
 // OAuth flow tester popup callback — outside the AuthGate so the redirect
-// from /api/v1/oauth/authorize lands without an mcpist session cookie.
+// from /api/v1/oauth/authorize lands without an mcp-postgresql session cookie.
 const oauthTestCallbackRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/oauth-test/callback",

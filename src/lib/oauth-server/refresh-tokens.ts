@@ -15,7 +15,7 @@ import * as jose from "jose";
 import { loadEd25519Keypair } from "@/lib/ed25519";
 
 const TTL_S = 90 * 24 * 60 * 60; // 90 days
-const AUDIENCE = "mcpist-oauth-refresh";
+const AUDIENCE = "mcp-postgresql-oauth-refresh";
 
 export interface RefreshPayload {
   clientId: string;

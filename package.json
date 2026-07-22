@@ -1,5 +1,5 @@
 {
-  "name": "mcpist-vc",
+  "name": "mcp-postgresql",
   "version": "0.1.0",
   "private": true,
   "type": "module",

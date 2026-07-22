@@ -1,5 +1,5 @@
 /**
- * Auth for mcpist-vc — single-owner mode.
+ * Auth for mcp-postgresql — single-owner mode.
  *
  * No DB. The app has exactly one principal: the owner identified by
  * OWNER_EMAIL (hardcoded below). Two credential types are accepted:
@@ -23,7 +23,7 @@ import { publicConfig } from "@/lib/public-config";
 
 export const OWNER_EMAIL = "shiba.dog.leo.private@gmail.com";
 
-const ACCESS_TOKEN_AUDIENCE = "mcpist-oauth-access";
+const ACCESS_TOKEN_AUDIENCE = "mcp-postgresql-oauth-access";
 
 export interface AuthResult {
   authenticated: true;

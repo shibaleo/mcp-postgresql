@@ -4,7 +4,7 @@
  * 24-hour Ed25519 JWTs handed back from /oauth/token as the Bearer token.
  * The MCP `/mcp` endpoint verifies them via lib/auth.verifyAccessToken.
  *
- * Audience-bound to "mcpist-oauth-access" so a refresh-token JWT or
+ * Audience-bound to "mcp-postgresql-oauth-access" so a refresh-token JWT or
  * authorization-code JWT can never be accepted in its place.
  */
 
@@ -12,7 +12,7 @@ import * as jose from "jose";
 import { loadEd25519Keypair } from "@/lib/ed25519";
 
 const TTL_S = 24 * 60 * 60;
-const AUDIENCE = "mcpist-oauth-access";
+const AUDIENCE = "mcp-postgresql-oauth-access";
 
 export interface AccessTokenInfo {
   token: string;

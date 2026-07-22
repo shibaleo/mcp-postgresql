@@ -5,7 +5,7 @@
  *
  * Renders briefly while it relays the authorization code to the opener
  * window via postMessage, then closes itself. Lives outside AuthGate so
- * Clerk's redirect lands without requiring an mcpist session cookie.
+ * Clerk's redirect lands without requiring an mcp-postgresql session cookie.
  */
 
 import { useEffect } from "react";
@@ -14,7 +14,7 @@ export default function OAuthTestCallbackPage() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const message = {
-      type: "mcpist-oauth-test" as const,
+      type: "mcp-postgresql-oauth-test" as const,
       code: params.get("code"),
       state: params.get("state"),
       error: params.get("error"),

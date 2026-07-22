@@ -22,7 +22,7 @@ import {
 import { getModule, listModules } from "./modules";
 
 const PROTOCOL_VERSION = "2025-03-26";
-const SERVER_NAME = "mcpist";
+const SERVER_NAME = "mcp-postgresql";
 const SERVER_VERSION = "0.1.0";
 
 function err(

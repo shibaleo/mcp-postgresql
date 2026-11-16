@@ -14,15 +14,6 @@ import { AuthenticateWithRedirectCallback } from "@clerk/react";
 
 const McpServerPage = lazy(() => import("./app/(pages)/mcp-server/page"));
 const ConnectionsPage = lazy(() => import("./app/(pages)/connections/page"));
-const OAuthConsentPage = lazy(
-  () => import("./app/(pages)/oauth/consent/page"),
-);
-const OAuthTesterPage = lazy(
-  () => import("./app/(pages)/dev/oauth-tester/page"),
-);
-const OAuthTestCallbackPage = lazy(
-  () => import("./app/(pages)/oauth-test/callback/page"),
-);
 
 /* ── Route tree ── */
 
@@ -58,7 +49,6 @@ function lazyRoute(
 const mcpServerRoute = lazyRoute("/mcp-server", McpServerPage);
 const connectionsRoute = lazyRoute("/connections", ConnectionsPage);
 // Dev-only — not in the sidebar; reachable from the MCP Server page link.
-const oauthTesterRoute = lazyRoute("/dev/oauth-tester", OAuthTesterPage);
 
 // / → /mcp-server
 const indexRoute = createRoute({
@@ -76,40 +66,12 @@ const ssoCallbackRoute = createRoute({
   component: () => <AuthenticateWithRedirectCallback />,
 });
 
-// OAuth flow tester popup callback — outside the AuthGate so the redirect
-// from /api/v1/oauth/authorize lands without an mcp-postgresql session cookie.
-const oauthTestCallbackRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: "/oauth-test/callback",
-  component: () => (
-    <Suspense>
-      <OAuthTestCallbackPage />
-    </Suspense>
-  ),
-});
 
-/**
- * OAuth consent gateway — landing page for /api/v1/oauth/authorize when
- * no Clerk session exists. The page wraps itself in AuthGate (Clerk
- * login screen), then auto-redirects back to the authorize endpoint
- * with the cookie set. No app sidebar / chrome.
- */
-const oauthConsentRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: "/oauth/consent",
-  component: () => (
-    <Suspense>
-      <OAuthConsentPage />
-    </Suspense>
-  ),
-});
 
 const routeTree = rootRoute.addChildren([
-  authLayout.addChildren([mcpServerRoute, connectionsRoute, oauthTesterRoute]),
+  authLayout.addChildren([mcpServerRoute, connectionsRoute]),
   indexRoute,
   ssoCallbackRoute,
-  oauthTestCallbackRoute,
-  oauthConsentRoute,
 ]);
 
 export const router = createRouter({ routeTree });

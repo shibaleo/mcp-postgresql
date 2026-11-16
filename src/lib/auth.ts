@@ -7,18 +7,13 @@
  *   1. Clerk session JWT (browser → Vercel) — verified via JWKS, then the
  *      Clerk profile is fetched once and the primary email is matched
  *      against OWNER_EMAIL. Anyone else: rejected.
- *   2. Bearer access token (MCP client → Vercel) — Ed25519 JWT minted by
- *      the OAuth /token endpoint. Audience-bound, expiry-checked. The
- *      mere fact that a valid signature exists is enough — it could only
- *      have been issued via /authorize, which itself required an owner
- *      Clerk session.
+ *   2. Auth0 access token (MCP client → Vercel) — Regulus の docs/056。src/lib/auth0.ts が確かめる。
+ *      自作の OAuth（Ed25519 の疑似 OAuth）は 2026-11-17 に消した。
  *
  * In-memory caches per warm Lambda avoid re-hitting Clerk on every request.
  */
 
 import * as jose from "jose";
-import type { KeyObject } from "node:crypto";
-import { loadEd25519Keypair } from "@/lib/ed25519";
 import { publicConfig } from "@/lib/public-config";
 import { getAppUrl } from "@/lib/app-url";
 import { AUTH0_ISSUER, peekIssuer, verifyAuth0AccessToken } from "@/lib/auth0";
@@ -26,18 +21,15 @@ import { ALL_SCOPES } from "@/lib/scopes";
 
 export const OWNER_EMAIL = "shiba.dog.leo.private@gmail.com";
 
-const ACCESS_TOKEN_AUDIENCE = "mcp-postgresql-oauth-access";
-
 export interface AuthResult {
   authenticated: true;
-  /** "auth0" = 新（Regulus の docs/056）。"clerk"・"oauth"（自作）は Auth0 への移行が済んだら消す */
-  source: "auth0" | "clerk" | "oauth";
+  /** "auth0" = MCP のクライアント（Regulus の docs/056）。"clerk" = ブラウザの管理画面（web の Auth0 化で消す） */
+  source: "auth0" | "clerk";
   /** 許された scope。旧の仕組みは持ち主だけが使えるので全部（ALL_SCOPES） */
   scopes: string[];
 }
 
 const OWNER: AuthResult = { authenticated: true, source: "clerk", scopes: ALL_SCOPES };
-const OAUTH_OWNER: AuthResult = { authenticated: true, source: "oauth", scopes: ALL_SCOPES };
 
 // ── Clerk JWKS ────────────────────────────────────────────────────────────
 
@@ -120,35 +112,6 @@ async function verifyClerkToken(token: string): Promise<AuthResult | null> {
   }
 }
 
-// ── OAuth access-token path ───────────────────────────────────────────────
-
-let accessTokenVerifier: KeyObject | null = null;
-
-function getAccessTokenVerifier(): KeyObject | null {
-  if (accessTokenVerifier) return accessTokenVerifier;
-  try {
-    accessTokenVerifier = loadEd25519Keypair().publicKey;
-    return accessTokenVerifier;
-  } catch (e) {
-    console.error("[auth] failed to derive access-token verifier:", e);
-    return null;
-  }
-}
-
-async function verifyAccessToken(rawToken: string): Promise<AuthResult | null> {
-  const verifier = getAccessTokenVerifier();
-  if (!verifier) return null;
-  try {
-    await jose.jwtVerify(rawToken, verifier, {
-      algorithms: ["EdDSA"],
-      audience: ACCESS_TOKEN_AUDIENCE,
-    });
-    return OAUTH_OWNER;
-  } catch {
-    return null;
-  }
-}
-
 // ── Token extraction ──────────────────────────────────────────────────────
 
 function extractBearerToken(req: Request): string | null {
@@ -179,10 +142,7 @@ export async function authenticate(req: Request): Promise<AuthResult | null> {
     return { authenticated: true, source: "auth0", scopes: r.principal.scopes };
   }
   if (bearer) {
-    // Try OAuth access token first (most common on /mcp), then Clerk JWT
-    // (browser via Bearer header — uncommon but allowed).
-    const r = await verifyAccessToken(bearer);
-    if (r) return r;
+    // Clerk の JWT（ブラウザの管理画面。Bearer で来ることもある）
     const c = await verifyClerkToken(bearer);
     if (c) return c;
   }
@@ -194,23 +154,3 @@ export async function authenticate(req: Request): Promise<AuthResult | null> {
   return null;
 }
 
-/**
- * Convenience: did this Clerk session belong to the owner? Used by the
- * /oauth/authorize endpoint to gate consent without going through the
- * full bearer-or-cookie matrix.
- */
-export async function authenticateClerkOwner(
-  req: Request,
-): Promise<AuthResult | null> {
-  const cookie = extractSessionCookie(req);
-  if (cookie) {
-    const r = await verifyClerkToken(cookie);
-    if (r) return r;
-  }
-  const bearer = extractBearerToken(req);
-  if (bearer) {
-    const r = await verifyClerkToken(bearer);
-    if (r) return r;
-  }
-  return null;
-}

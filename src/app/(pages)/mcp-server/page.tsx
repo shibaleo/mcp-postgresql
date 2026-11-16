@@ -34,7 +34,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { Link } from "@/lib/router";
 
 type StepStatus = "pending" | "running" | "success" | "error";
 
@@ -348,15 +347,6 @@ export default function McpServerPage() {
         </CardContent>
       </Card>
 
-      <p className="text-xs text-muted-foreground">
-        Need to debug the full OAuth handshake?{" "}
-        <Link
-          to={"/dev/oauth-tester" as string}
-          className="text-primary hover:underline"
-        >
-          Open the OAuth flow tester →
-        </Link>
-      </p>
     </div>
   );
 }

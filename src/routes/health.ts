@@ -13,7 +13,6 @@ const app = new Hono().get("/", (c) =>
     env: {
       hasClerkPK: !!publicConfig.clerkPublishableKey,
       hasClerkSK: !!process.env.CLERK_SECRET_KEY,
-      hasJwtKey: !!process.env.MCP_POSTGRESQL_SERVER_JWT_SIGNING_KEY,
       hasEncKey: !!process.env.MCP_POSTGRESQL_CREDENTIAL_ENCRYPTION_KEY,
       hasRegistryUrl: !!process.env.MCP_POSTGRESQL_REGISTRY_DATABASE_URL,
       appUrl: getAppUrl(c.req.raw),

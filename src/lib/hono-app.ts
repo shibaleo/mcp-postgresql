@@ -11,9 +11,6 @@ export type Env = { Variables: { authResult: AuthResult } };
 import health from "@/routes/health";
 import mcp from "@/routes/mcp";
 import wellKnown from "@/routes/well-known";
-import oauthRegister from "@/routes/oauth-register";
-import oauthAuthorize from "@/routes/oauth-authorize";
-import oauthToken from "@/routes/oauth-token";
 import connections from "@/routes/connections";
 
 /* ── V1 API sub-app ──
@@ -78,22 +75,12 @@ const v1 = new Hono<Env>()
   .route("/health", health)
   // MCP OAuth discovery endpoints (RFC 9728 + RFC 8414).
   .route("/.well-known", wellKnown)
-  // Dynamic Client Registration (RFC 7591) — public, no bearer token.
-  .route("/oauth/register", oauthRegister)
-  // Authorization endpoint — checks the Clerk session cookie itself
-  // and 302-redirects to /oauth/consent if not signed in.
-  .route("/oauth/authorize", oauthAuthorize)
-  // Token endpoint — verifies PKCE + code, issues access_token.
-  .route("/oauth/token", oauthToken)
   // Auth gate
   .use("*", async (c, next) => {
     const path = c.req.path;
     if (
       path.startsWith("/api/v1/.well-known/") ||
-      path === "/api/v1/health" ||
-      path === "/api/v1/oauth/register" ||
-      path === "/api/v1/oauth/authorize" ||
-      path === "/api/v1/oauth/token"
+      path === "/api/v1/health"
     ) {
       return next();
     }

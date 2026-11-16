@@ -33,36 +33,9 @@ const app = new Hono()
       {
         resource: `${appUrl}/api/v1/mcp`,
         // 認可サーバーは Auth0（Regulus の docs/056）。issuer と一字一句同じ（末尾の / も）。
-        // 下の oauth-authorization-server（自作）は接続済みの古いクライアントのために、移行が済むまで残す
         authorization_servers: [AUTH0_ISSUER],
         scopes_supported: ALL_SCOPES,
         bearer_methods_supported: ["header"],
-      },
-      200,
-      corsAndCacheHeaders,
-    );
-  })
-  /**
-   * RFC 8414 Authorization Server Metadata.
-   *
-   * issuer matches the URL the client fetches this from (per the spec).
-   * Endpoints all live on our domain — Clerk is invisible here. The
-   * authorize endpoint internally checks Clerk session cookies for user
-   * authentication, but that's an implementation detail.
-   */
-  .get("/oauth-authorization-server", (c) => {
-    const appUrl = getAppUrl(c.req.raw);
-    return c.json(
-      {
-        issuer: appUrl,
-        authorization_endpoint: `${appUrl}/api/v1/oauth/authorize`,
-        token_endpoint: `${appUrl}/api/v1/oauth/token`,
-        registration_endpoint: `${appUrl}/api/v1/oauth/register`,
-        response_types_supported: ["code"],
-        grant_types_supported: ["authorization_code", "refresh_token"],
-        code_challenge_methods_supported: ["S256"],
-        token_endpoint_auth_methods_supported: ["none"],
-        scopes_supported: ["openid", "profile", "email"],
       },
       200,
       corsAndCacheHeaders,

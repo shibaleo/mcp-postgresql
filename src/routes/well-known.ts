@@ -13,6 +13,8 @@
 
 import { Hono } from "hono";
 import { getAppUrl } from "@/lib/app-url";
+import { AUTH0_ISSUER } from "@/lib/auth0";
+import { ALL_SCOPES } from "@/lib/scopes";
 
 const corsAndCacheHeaders = {
   "Cache-Control": "public, max-age=3600",
@@ -30,8 +32,10 @@ const app = new Hono()
     return c.json(
       {
         resource: `${appUrl}/api/v1/mcp`,
-        authorization_servers: [appUrl],
-        scopes_supported: ["openid", "profile", "email"],
+        // 認可サーバーは Auth0（Regulus の docs/056）。issuer と一字一句同じ（末尾の / も）。
+        // 下の oauth-authorization-server（自作）は接続済みの古いクライアントのために、移行が済むまで残す
+        authorization_servers: [AUTH0_ISSUER],
+        scopes_supported: ALL_SCOPES,
         bearer_methods_supported: ["header"],
       },
       200,

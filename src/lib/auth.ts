@@ -20,6 +20,9 @@ import * as jose from "jose";
 import type { KeyObject } from "node:crypto";
 import { loadEd25519Keypair } from "@/lib/ed25519";
 import { publicConfig } from "@/lib/public-config";
+import { getAppUrl } from "@/lib/app-url";
+import { AUTH0_ISSUER, peekIssuer, verifyAuth0AccessToken } from "@/lib/auth0";
+import { ALL_SCOPES } from "@/lib/scopes";
 
 export const OWNER_EMAIL = "shiba.dog.leo.private@gmail.com";
 
@@ -27,12 +30,14 @@ const ACCESS_TOKEN_AUDIENCE = "mcp-postgresql-oauth-access";
 
 export interface AuthResult {
   authenticated: true;
-  /** "clerk" for browser-issued, "oauth" for MCP-client-issued */
-  source: "clerk" | "oauth";
+  /** "auth0" = 新（Regulus の docs/056）。"clerk"・"oauth"（自作）は Auth0 への移行が済んだら消す */
+  source: "auth0" | "clerk" | "oauth";
+  /** 許された scope。旧の仕組みは持ち主だけが使えるので全部（ALL_SCOPES） */
+  scopes: string[];
 }
 
-const OWNER: AuthResult = { authenticated: true, source: "clerk" };
-const OAUTH_OWNER: AuthResult = { authenticated: true, source: "oauth" };
+const OWNER: AuthResult = { authenticated: true, source: "clerk", scopes: ALL_SCOPES };
+const OAUTH_OWNER: AuthResult = { authenticated: true, source: "oauth", scopes: ALL_SCOPES };
 
 // ── Clerk JWKS ────────────────────────────────────────────────────────────
 
@@ -164,6 +169,15 @@ function extractSessionCookie(req: Request): string | null {
 
 export async function authenticate(req: Request): Promise<AuthResult | null> {
   const bearer = extractBearerToken(req);
+  // 新: Auth0 のアクセストークン（発行元で振り分ける。宛先はこの MCP の口の URL）
+  if (bearer && peekIssuer(bearer) === AUTH0_ISSUER) {
+    const r = await verifyAuth0AccessToken(bearer, { audience: `${getAppUrl(req)}/api/v1/mcp` });
+    if (!r.ok) {
+      console.log(`[auth] auth0 token rejected: ${r.reason}`);
+      return null;
+    }
+    return { authenticated: true, source: "auth0", scopes: r.principal.scopes };
+  }
   if (bearer) {
     // Try OAuth access token first (most common on /mcp), then Clerk JWT
     // (browser via Bearer header — uncommon but allowed).

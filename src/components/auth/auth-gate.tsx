@@ -7,7 +7,7 @@ import {
   useState,
   useCallback,
 } from "react";
-import { useAuth } from "@clerk/react";
+import { takeLoginError } from "@/lib/session-client";
 import { LoginPage } from "./login-page";
 
 export interface MeUser {
@@ -32,10 +32,9 @@ export function useMe(): UserContextValue {
 type AuthState = "loading" | "authenticated" | "unauthenticated";
 
 export function AuthGate({ children }: { children: React.ReactNode }) {
-  const { isLoaded, isSignedIn, signOut } = useAuth();
   const [state, setState] = useState<AuthState>("loading");
   const [me, setMe] = useState<MeUser | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error] = useState<string | null>(() => takeLoginError());
 
   const fetchMe = useCallback(async (): Promise<boolean> => {
     try {
@@ -51,30 +50,10 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
     return false;
   }, []);
 
-  const verifySession = useCallback(async () => {
-    setState("loading");
-    setError(null);
-    const ok = await fetchMe();
-    if (ok) {
-      setState("authenticated");
-    } else {
-      if (isSignedIn) {
-        setError("Authentication failed");
-        await signOut();
-      }
-      setState("unauthenticated");
-    }
-  }, [isSignedIn, signOut, fetchMe]);
-
+  // セッションは HttpOnly の cookie（src/lib/session.ts）。/me が通るかだけを見る
   useEffect(() => {
-    if (!isLoaded) return;
-
-    if (isSignedIn) {
-      verifySession();
-    } else {
-      setState("unauthenticated");
-    }
-  }, [isLoaded, isSignedIn, verifySession]);
+    fetchMe().then((ok) => setState(ok ? "authenticated" : "unauthenticated"));
+  }, [fetchMe]);
 
   if (state === "loading" || (state === "authenticated" && !me)) {
     return (

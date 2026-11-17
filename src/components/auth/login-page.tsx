@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { useSignIn } from "@clerk/react";
+import { startLogin } from "@/lib/session-client";
 import { SITE_NAME } from "@/lib/site";
 import { Button } from "@/components/ui/button";
 
@@ -9,25 +8,7 @@ interface LoginPageProps {
   error?: string | null;
 }
 
-export function LoginPage({ error: externalError }: LoginPageProps) {
-  const { signIn } = useSignIn();
-  const [error, setError] = useState<string | null>(null);
-
-  async function handleGoogleLogin() {
-    if (!signIn) return;
-    try {
-      await signIn.sso({
-        strategy: "oauth_google",
-        redirectCallbackUrl: "/sso-callback",
-        redirectUrl: "/",
-      });
-    } catch {
-      setError("Google login failed");
-    }
-  }
-
-  const displayError = externalError ?? error;
-
+export function LoginPage({ error: displayError }: LoginPageProps) {
   return (
     <div className="flex h-dvh items-center justify-center">
       <div className="w-full max-w-sm space-y-6 px-4">
@@ -45,7 +26,7 @@ export function LoginPage({ error: externalError }: LoginPageProps) {
         <Button
           variant="outline"
           className="w-full"
-          onClick={handleGoogleLogin}
+          onClick={startLogin}
         >
           <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
             <path

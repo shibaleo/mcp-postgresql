@@ -5,9 +5,8 @@
  *   GET  /?reveal=1     → [{name, description, url}]            (owner UI to edit existing)
  *   PUT  /              → bulk replace; body is the full new list
  *
- * Sits behind the auth gate in lib/hono-app.ts — both Clerk-session and
- * OAuth-access-token requests are accepted, but in single-owner mode either
- * path means "the owner".
+ * Sits behind the auth gate in lib/hono-app.ts. 管理画面のセッション（cookie）だけが通る
+ * （MCP のクライアントの Bearer は hono-app.ts の関門で 403。接続文字列を MCP のトークンで読ませない）。
  */
 
 import { Hono } from "hono";

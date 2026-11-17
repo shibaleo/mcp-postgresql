@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { logger } from "hono/logger";
 import { cors } from "hono/cors";
 import { authenticate, OWNER_EMAIL, type AuthResult } from "@/lib/auth";
+import session, { isSameOrigin, sessionAccessToken } from "@/lib/session";
 import { getAppUrl } from "@/lib/app-url";
 
 console.log("[boot] hono-app: module load");
@@ -75,16 +76,22 @@ const v1 = new Hono<Env>()
   .route("/health", health)
   // MCP OAuth discovery endpoints (RFC 9728 + RFC 8414).
   .route("/.well-known", wellKnown)
+  // 管理画面のログイン（BFF。認証の外 = ここが認証を作る側）
+  .route("/session", session)
   // Auth gate
   .use("*", async (c, next) => {
     const path = c.req.path;
     if (
       path.startsWith("/api/v1/.well-known/") ||
+      path.startsWith("/api/v1/session/") ||
       path === "/api/v1/health"
     ) {
       return next();
     }
-    const result = await authenticate(c.req.raw);
+    // Bearer があればセッションは見ない（refresh の往復をしない）
+    const hasBearer = c.req.header("authorization") !== undefined;
+    const sessionToken = hasBearer ? null : await sessionAccessToken(c);
+    const result = await authenticate(c.req.raw, sessionToken);
     if (!result) {
       // RFC 9728 §5.1: include resource_metadata so MCP clients can
       // discover the authorization server and start the OAuth flow.
@@ -97,6 +104,14 @@ const v1 = new Hono<Env>()
           "WWW-Authenticate": `Bearer realm="mcp-postgresql", resource_metadata="${resourceMetadata}"`,
         },
       );
+    }
+    // cookie で来た書き込みは同じ origin からに限る（CSRF）
+    if (result.transport === "session" && !["GET", "HEAD", "OPTIONS"].includes(c.req.method) && !isSameOrigin(c.req.raw)) {
+      return c.json({ error: "cross-site request" }, 403);
+    }
+    // 管理画面の API は管理画面のセッションだけ。MCP のクライアント（Claude など）のトークンでは使えない
+    if (result.transport !== "session" && !path.startsWith("/api/v1/mcp")) {
+      return c.json({ error: "console only (sign in on the web console)" }, 403);
     }
     c.set("authResult", result);
     await next();

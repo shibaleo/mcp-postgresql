@@ -2,7 +2,7 @@
 
 /**
  * Personal account settings dialog. Profile is read-only — display name
- * and email come from Clerk; edit there to change them.
+ * and email come from the Google sign-in (Auth0).
  */
 
 import { useMe } from "@/components/auth/auth-gate";
@@ -51,7 +51,7 @@ export function UserSettingsDialog({ open, onOpenChange }: Props) {
               </p>
             </div>
             <p className="text-xs text-muted-foreground pt-1">
-              Profile is synced from Clerk. To edit, update your Clerk profile.
+              Profile comes from your Google account (signed in through Auth0).
             </p>
           </section>
         </div>

@@ -13,7 +13,6 @@
     "deploy": "dotenv -e .env.local -- bws run --project-id b49ccb02-f02b-4c7e-a4c1-b48e005732fc -- vercel deploy --prod --yes"
   },
   "dependencies": {
-    "@clerk/react": "^6.4.2",
     "@hono/zod-validator": "^0.7.6",
     "@radix-ui/react-dialog": "^1.1.14",
     "@radix-ui/react-label": "^2.1.6",

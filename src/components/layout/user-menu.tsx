@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useAuth } from "@clerk/react";
+import { logout } from "@/lib/session-client";
 import { Settings, LogOut } from "lucide-react";
 import { useMe } from "@/components/auth/auth-gate";
 import {
@@ -28,14 +28,12 @@ function Avatar({ name, className }: { name: string; className?: string }) {
 
 export function UserMenu({ collapsed = false }: { collapsed?: boolean }) {
   const { me } = useMe();
-  const { isSignedIn, signOut } = useAuth();
   const [open, setOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
-  async function handleLogout() {
+  function handleLogout() {
     setOpen(false);
-    if (isSignedIn) await signOut();
-    window.location.href = "/";
+    logout();
   }
 
   const displayName = me.name || me.email || "Account";

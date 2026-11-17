@@ -9,7 +9,7 @@
  * alias (`postgresql.mcp.shibaleo.uk`).
  *
  * Resolution order:
- *   1. publicConfig.baseUrl — the canonical prod origin (Clerk-registered
+ *   1. publicConfig.baseUrl — the canonical prod origin (registered as
  *      custom domain), baked at build time. null in dev.
  *   2. VERCEL_PROJECT_PRODUCTION_URL — auto-injected by Vercel; canonical
  *      production hostname even on preview-URL hits (safety fallback).

@@ -45,9 +45,12 @@ function honoDevServer(): Plugin {
           const response: Response = await app.fetch(request);
 
           res.statusCode = response.status;
-          response.headers.forEach((value: string, key: string) => {
-            res.setHeader(key, value);
+          response.headers.forEach((value, key) => {
+            if (key.toLowerCase() !== "set-cookie") res.setHeader(key, value);
           });
+          // Set-Cookie は複数ありうる（server-entry.ts と同じ）
+          const cookies = response.headers.getSetCookie();
+          if (cookies.length) res.setHeader("set-cookie", cookies);
 
           const arrayBuffer = await response.arrayBuffer();
           res.end(Buffer.from(arrayBuffer));

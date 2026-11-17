@@ -8,7 +8,6 @@ import {
 } from "@tanstack/react-router";
 import { AuthGate } from "@/components/auth/auth-gate";
 import { AppLayout } from "@/components/layout/app-layout";
-import { AuthenticateWithRedirectCallback } from "@clerk/react";
 
 /* ── Lazy page imports ── */
 
@@ -59,19 +58,12 @@ const indexRoute = createRoute({
   },
 });
 
-// SSO callback (outside auth layout)
-const ssoCallbackRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: "/sso-callback",
-  component: () => <AuthenticateWithRedirectCallback />,
-});
 
 
 
 const routeTree = rootRoute.addChildren([
   authLayout.addChildren([mcpServerRoute, connectionsRoute]),
   indexRoute,
-  ssoCallbackRoute,
 ]);
 
 export const router = createRouter({ routeTree });

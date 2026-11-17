@@ -79,8 +79,12 @@ export default async function handler(
 
     res.statusCode = response.status;
     response.headers.forEach((value, key) => {
-      res.setHeader(key, value);
+      if (key.toLowerCase() !== "set-cookie") res.setHeader(key, value);
     });
+    // Set-Cookie は複数ありうる（ログインの途中の cookie を消しながらセッションの cookie を置く）。
+    // forEach で setHeader すると最後の 1 つしか残らないので、配列で渡す
+    const cookies = response.headers.getSetCookie();
+    if (cookies.length) res.setHeader("set-cookie", cookies);
 
     const arrayBuffer = await response.arrayBuffer();
     res.end(arrayBuffer.byteLength ? Buffer.from(arrayBuffer) : undefined);

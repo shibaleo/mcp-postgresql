@@ -1,10 +1,8 @@
 /**
  * .well-known endpoints for MCP OAuth discovery.
  *
- * mcp-postgresql runs its OWN OAuth Authorization Server (proxying Clerk for
- * end-user login under the hood). Discovery metadata advertises our
- * authorize / token / register endpoints — clients (Claude.ai, Claude
- * Desktop, ...) never talk to Clerk's OAuth surface directly.
+ * 認可サーバーは Auth0（https://auth.shibaleo.uk/。Regulus の docs/056）。ここは保護されたリソースのメタデータ（RFC 9728）で
+ * Auth0 を案内する。自作の認可サーバー（Clerk の上に作っていたもの）は 2026-11-17 に消した。
  *
  * Mounted at both /api/v1/.well-known/* (canonical) and /.well-known/*
  * (apex, mounted in hono-app) so MCP clients that look in either spot

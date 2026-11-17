@@ -4,7 +4,7 @@
 //   (bws でラップしない。BWS_ACCESS_TOKEN を持った状態でこのスクリプトが bws を per-project で呼ぶ)
 //
 // secret の2分類を storage で混ぜない:
-//   - app runtime secret (CLERK_SECRET_KEY / MCP_POSTGRESQL_*) → prod-secrets から read
+//   - app runtime secret (AUTH0_MCP_CONSOLE_CLIENT_SECRET / MCP_POSTGRESQL_*) → prod-secrets から read
 //   - Vercel CLI の認証 (VERCEL_TOKEN)                          → hub から read
 //   bws run はネスト不可なので、両者を別々の単一プロジェクト list で取得し、値は
 //   メモリ内に保持。Vercel CLI へは stdin で渡し、標準出力には出さない。
@@ -17,7 +17,8 @@ const PROD = "16c74c07-0fb8-468a-8606-b48e01757644"; // app runtime secrets
 // 稼働 Function が process.env から runtime に読む app secret。
 // Vercel の env 名 = コードが読む名前。値は prod-secrets の同名 key から取る。
 const KEYS = [
-  "CLERK_SECRET_KEY",
+  "AUTH0_MCP_CONSOLE_CLIENT_SECRET",
+  "MCP_POSTGRESQL_SESSION_KEY",
   "MCP_POSTGRESQL_REGISTRY_DATABASE_URL",
   "MCP_POSTGRESQL_CREDENTIAL_ENCRYPTION_KEY",
 ];
